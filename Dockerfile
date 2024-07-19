@@ -1,8 +1,7 @@
 FROM alpine AS builder
 RUN apk add --update yarn
 WORKDIR /app
-COPY package.json /app/
-COPY yarn.lock /app/
+COPY package.json yarn.lock /app/
 RUN yarn install --production
 
 COPY ./src /app/src
