@@ -1,9 +1,24 @@
-import React from 'react'
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+import keycloak from "../keycloak";
+import { useAuth } from "../context/AuthConetxt";
 
 const Main = () => {
-  return (
-    <div>MainPage</div>
-  )
-}
+  const navigate = useNavigate();
 
-export default Main
+  const { logout, login, authenticated } = useAuth();
+
+  return (
+    <div>
+      <ul>
+        <li onClick={() => navigate("/")}>Home</li>
+        <li onClick={() => navigate("/profile")}>Profile</li>
+        {!authenticated && <li onClick={login}>Login</li>}
+        {authenticated && <li onClick={logout}>Logout</li>}
+      </ul>
+    </div>
+  );
+};
+
+export default Main;
