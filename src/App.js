@@ -7,11 +7,8 @@ import Main from "./pages/Main";
 import Profile from "./pages/Profile";
 
 const ProtectedRoute = ({ element }) => {
-  const { authenticated, loading, login } = useAuth();
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
+  const { authenticated, login } = useAuth();
+  
   if (authenticated) {
     return element;
   } else {
@@ -21,7 +18,6 @@ const ProtectedRoute = ({ element }) => {
 };
 
 function App() {
-  const { authenticated } = useAuth();
 
   return (
     <Router>

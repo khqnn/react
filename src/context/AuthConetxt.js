@@ -1,55 +1,64 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
-import Keycloak from "keycloak-js";
+// src/AuthContext.js
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import Keycloak from 'keycloak-js';
 
-import keycloak from "../keycloak";
-
-// Create a context
 const AuthContext = createContext();
 
-// Create a provider component
+const keycloak = new Keycloak({
+  url: 'http://localhost:8080/',
+  realm: 'master',
+  clientId: 'frontend',
+});
+
 export const AuthProvider = ({ children }) => {
-  const [keycloakInstance, setKeycloakInstance] = useState(null);
+
+  console.log(process.env.REACT_APP_KEYCLOAK_ENABLED ?? false);
+  
+
   const [authenticated, setAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(process.env.REACT_APP_KEYCLOAK_ENABLED ?? false);
+  // const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
-    keycloak
-      .init({
-        onLoad: "check-sso", // or 'login-required'
-        checkLoginIframe: false, // Disable iframe check if not needed
-      })
-      .then((auth) => {
-        setKeycloakInstance(keycloak);
-        setAuthenticated(auth);
+    if(process.env.REACT_APP_KEYCLOAK_ENABLED ?? false){
+      keycloak.init({  }).then((authenticated) => {
+        setAuthenticated(authenticated);
+        setLoading(false);
+  
+        if (authenticated) {
+          setUser({
+            username: keycloak.tokenParsed.preferred_username,
+            email: keycloak.tokenParsed.email,
+          });
+        } else {
+          setUser(null);
+        }
+      }).catch(() => {
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("Keycloak initialization failed", err);
-        setLoading(false);
-      });
+    }
+      
   }, []);
 
-  const login = () => keycloak.login();
-  const logout = () => keycloak.logout();
-  const getToken = () => keycloak.token;
+  const login = () => {
+    keycloak.login();
+  };
+
+  const logout = () => {
+    keycloak.logout();
+  };
+
+  const isAuthenticated = () => {
+    return keycloak.authenticated;
+  }
 
   return (
-    <AuthContext.Provider
-      value={{
-        keycloakInstance,
-        authenticated,
-        loading,
-        login,
-        logout,
-        getToken,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={{ authenticated, user, login, logout }}>
+      {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook for using the AuthContext
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
